@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% block nav%} 
+
+{% endblock %}
+{% block head%} 
+
+  {% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class="alerts">
+      {% for message in messages %}
+        <li>{{ message }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+{% endblock %}
+{% block body%} 
+<form method="POST">
+    <input type="text" name="username" placeholder="Username" required/>
+    <input type="password" name="password" placeholder="Password" required/>
+    <button type="submit">Login</button>
+    <a href="/register">Register</a>
+</form>
+<style>
+/* Center the form on the page */
+form {
+    max-width: 350px;
+    margin: 80px auto;
+    padding: 30px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background-color: #f9f9f9;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Style the input fields */
+input[type="text"],
+input[type="password"] {
+    padding: 12px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+/* Style the submit button */
+button {
+    padding: 12px;
+    margin-top: 10px;
+    background-color: #30c035;
+    color: white;
+    border: none;
+    font-size: 16px;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+/* Style the register link */
+form a {
+    padding: 12px;
+    margin-top: 10px;
+    text-align: center;
+    background-color: #4792d7;
+    color: white;
+    border: none;
+    font-size: 16px;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+form a:hover {
+    text-decoration: none;
+    background-color: #2e83e4;
+    color: white;
+}
+</style>
+{% endblock %}
+
+{% block footer%} 
+
+{% endblock %}

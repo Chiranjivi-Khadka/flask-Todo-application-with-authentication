@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    {% block nav%} {% endblock %}
+      <nav class="nav">
+    <a href="/"><h5>My Todo Application - CRUD Operation With Postgres</h5></a>
+    
+    {% if current_user.is_authenticated %}
+        <span>Welcome {{ current_user.username }} !</span>
+        <a href="/logout" class="logout-btn">Logout</a>
+    {% else %}
+        
+        <a href="/register" class="signup-btn">Sign Up</a>
+    {% endif %}
+</nav>
+
+    {% block head%} {% endblock %}
+</head>
+<body>
+  <script>
+    // Auto-hide flash messages after 3 seconds
+    window.addEventListener('DOMContentLoaded', function() {
+        const alerts = document.querySelector('.alerts');
+        if (alerts) {
+            setTimeout(function() {
+                alerts.style.transition = 'opacity 0.5s ease';
+                alerts.style.opacity = '0';
+                setTimeout(function() {
+                    alerts.remove();
+                }, 500); // Remove after fade out
+            }, 2000); // Wait 3 seconds before fading
+        }
+    });
+</script>
+    {% block body%} {% endblock %}
+   
+</body>
+ {% block footer%} {% endblock %}
+    <footer>
+  &copy; 2025 My Todo App. All rights reserved.
+</footer>
+</html>

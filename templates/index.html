@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+
+{% block body%} 
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <ul class="alerts">
+      {% for message in messages %}
+        <li>{{ message }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+<div class="content">
+     
+    {% if tasks | length < 1%}
+      <h3>No Tasks Available. Please create one first!!</h3>
+    {% else %}  
+    <table>
+        <tr>
+            <th>Task</th>
+            <th>Added</th>
+            <th>Actions</th>
+        </tr>
+        {% for task in tasks%}
+            <tr>
+                <td>{{task.content}}</td>
+                <td>{{task.date_created.strftime("%Y-%m-%d")}}</td>
+                <td>
+                    <a href="/edit/{{ task.id }}">Edit</a>
+                    <a href="/delete/{{ task.id }}">Delete</a>
+                </td>
+            </tr>
+        {% endfor %}        
+    </table>
+    {% endif %}
+    <form action="/" method="POST">
+            <input type="text" name="content" id="content" placeholder="Enter new task">
+             <input type="date" name="date_created" id="date_created">
+            <input type="submit" value="Add Task" id="btn_add">
+    </form>
+</div>
+
+{% endblock %}
+
+{% block footer%} 
+
+{% endblock %}
