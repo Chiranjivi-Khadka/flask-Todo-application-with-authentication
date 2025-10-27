@@ -6,6 +6,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_admin import Admin
 from functools import wraps
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+from flask_admin.contrib.sqla import ModelView
 
 
 app = Flask(__name__)
@@ -18,6 +19,9 @@ db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login' # login view function
+
+admin = Admin(app, name='TodoAdmin', template_mode='bootstrap4')
+
 
 class User(db.Model, UserMixin):
     __tablename__ = 'users'
@@ -50,6 +54,12 @@ class Todo(db.Model):
 
     def __repr__(self):
         return f"Todo {self.id}"
+    
+# Admin views
+admin.add_view(ModelView(Todo, db.session))
+admin.add_view(ModelView(User, db.session))
+
+
     
  # User loader for Flask-Login
 @login_manager.user_loader
@@ -112,13 +122,14 @@ def logout():
 
 
     #home route  
-@app.route('/', methods=["POST","GET"])   
-@login_required
+@app.route('/', methods=["POST", "GET"])
 def index():
-
-    user_id = current_user.id
-
     if request.method == 'POST':
+        if not current_user.is_authenticated:
+            flash('Please log in to add tasks.')
+            return redirect(url_for('login'))
+
+        user_id = current_user.id
         current_task = request.form['content']
         date_task = request.form.get('date_created')
 
@@ -139,8 +150,14 @@ def index():
             flash(f"Error adding task: {e}")
             return redirect('/')
     else:
-        tasks = Todo.query.filter_by(user_id=user_id).order_by(Todo.date_created).all()
-        return render_template('index.html', tasks=tasks, username=current_user.username)
+        if current_user.is_authenticated:
+            tasks = Todo.query.filter_by(user_id=current_user.id).order_by(Todo.date_created).all()
+            username = current_user.username
+        else:
+            tasks = []
+            username = None  # or "Guest"
+        return render_template('index.html', tasks=tasks, username=username)
+
 
 #delete route
 @app.route("/delete/<int:id>")
