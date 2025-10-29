@@ -7,7 +7,8 @@ from flask_admin import Admin
 from functools import wraps
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from flask_admin.contrib.sqla import ModelView
-
+from authlib.integrations.flask_client import OAuth
+from api_key import CLIENT_ID, CLIENT_SECRET    
 
 app = Flask(__name__)
 app.secret_key = "my_secrect_key12345"
@@ -21,6 +22,17 @@ login_manager.init_app(app)
 login_manager.login_view = 'login' # login view function
 
 admin = Admin(app, name='TodoAdmin', template_mode='bootstrap4')
+
+
+oauth = OAuth(app)
+google = oauth.register(
+    name='google',
+    client_id=CLIENT_ID,
+    client_secret=CLIENT_SECRET,
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_kwargs={'scope': 'openid email profile'},
+
+)
 
 
 class User(db.Model, UserMixin):
@@ -121,10 +133,11 @@ def logout():
     return redirect('/login')
 
 
-    #home route  
+#home route  
 @app.route('/', methods=["POST", "GET"])
 def index():
     if request.method == 'POST':
+        # Ensure user is authenticated before adding a task
         if not current_user.is_authenticated:
             flash('Please log in to add tasks.')
             return redirect(url_for('login'))
@@ -197,7 +210,57 @@ def edit(id):
             return redirect('/')
     else:
         return render_template('edit.html', task=task)
+    
+
+# Google Login route
+@app.route('/login/google')
+def google_login():
+    try:
+        redirect_uri = url_for('google_authorize', _external=True)
+        return google.authorize_redirect(redirect_uri)
+    except Exception as e:
+        app.logger.error(f"Google login error: {e}")
+        return "An error occurred during Google login." , 500
+    
+ #Authorize route   
+@app.route('/authorized/google')
+def google_authorize():
+    try:
+        token = google.authorize_access_token()
+        userinfo_endpoint = google.server_metadata['userinfo_endpoint']
+        resp = google.get(userinfo_endpoint)
+        user_info = resp.json()
         
+        email = user_info.get('email')
+        if not email:
+            flash("Could not get your email from Google.")
+            return redirect('/login')
+
+        user = User.query.filter_by(username=email).first()
+        if not user:
+            # Create a new OAuth user
+            user = User(
+                username=email,
+                email=email,
+                password_hash=None,
+                is_admin=False
+            )
+            db.session.add(user)
+            db.session.commit()
+
+        
+        session['oauth_token'] = token
+        login_user(user)
+        flash("Logged in with Google successfully!")
+        return redirect('/')
+    except Exception as e:
+        app.logger.error(f"Google OAuth error: {e}")
+        flash("An error occurred during Google login.")
+        return redirect('/login')
+
+
+
+
 
 if __name__ == "__main__":
     with app.app_context():
